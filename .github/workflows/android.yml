@@ -1,0 +1,31 @@
+name: Build Squeezelite Android
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install deps
+      run: sudo apt-get update && sudo apt-get install -y make
+
+    - name: Download Android NDK
+      run: |
+        wget https://dl.google.com/android/repository/android-ndk-r23b-linux.zip
+        unzip android-ndk-r23b-linux.zip
+
+    - name: Build
+      run: |
+        export ANDROID_NDK=$PWD/android-ndk-r23b
+        export TOOLCHAIN=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64
+        export CC=$TOOLCHAIN/bin/armv7a-linux-androideabi21-clang
+        make -f Makefile.android \
+          OPTS="-DNO_RESAMPLE -DNO_IR -DNO_FF"
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: squeezelite-android
+        path: squeezelite
